@@ -2,22 +2,22 @@ $schema: "1.0"
 name: ReedR-ImageDef
 image: MicrosoftWindowsDesktop_windows-ent-cpc_win11-21h2-ent-cpc-m365
 tasks:
-    - name: winget
+    - name: ~/winget
       parameters:
         package:  Microsoft.PowerToys
-    - name: winget
+    - name: ~/winget
       parameters:
         package:  Microsoft.VisualStudioCode
-    - name: winget
+    - name: ~/winget
       parameters:
         package:  Microsoft.AzureCLI
-    - name: winget
+    - name: ~/winget
       parameters:
         package:  GitHub.GitHubDesktop
-    - name: winget
+    - name: ~/winget
       parameters:
         package: VideoLAN.VLC
-    - name: git-clone
+    - name: ~/git-clone
       description: Clone this repository into C:\Workspaces
       parameters:
         repositoryUrl: https://github.com/dhruvchand/contoso-co-eShop.git
