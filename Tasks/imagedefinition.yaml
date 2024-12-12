@@ -14,3 +14,11 @@ tasks:
     - name: winget
       parameters:
         package:  GitHub.GitHubDesktop
+      - name: winget
+        parameters:
+          package: VideoLAN.VLC
+      - name: git-clone
+        description: Clone this repository into C:\Workspaces
+        parameters:
+          repositoryUrl: https://github.com/breakpoint7/devbox.git
+          directory: C:\Workspaces        
