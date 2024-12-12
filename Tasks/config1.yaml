@@ -10,5 +10,5 @@ tasks:
   - name: git-clone
     description: Clone this repository into C:\Workspaces
     parameters:
-      repositoryUrl: https://github.com/dhruvchand/contoso-co-eShop.git
+      repositoryUrl: https://github.com/breakpoint7/devbox.git
       directory: C:\Workspaces
