@@ -7,10 +7,14 @@ jobs:
   test:
     runs-on: windows-latest
     steps:
-      - name: Install winget
+      - name: Install Chocolatey
         run: |
-          Invoke-WebRequest -Uri https://aka.ms/get-winget -OutFile winget.msix
-          Add-AppxPackage .\winget.msix    - name: Winget test
-          
+          Set-ExecutionPolicy Bypass -Scope Process -Force; `
+          [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; `
+          iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+
+      - name: Install winget using Chocolatey
+        run: choco install microsoft-windows-appinstaller -y
+
       - name: Test Winget
         run: winget list --accept-source-agreements
