@@ -11,10 +11,15 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Download and Install Windows Driver Kit (WDK)
+      - name: Install Visual Studio 2022 and Required Workloads
         run: |
-          Invoke-WebRequest -Uri "https://go.microsoft.com/fwlink/?linkid=2128854" -OutFile "winsdksetup.exe"
-          Start-Process -FilePath "winsdksetup.exe" -ArgumentList "/features OptionId.WindowsDesktopDebuggers OptionId.WindowsDesktopDevelopmentTools OptionId.WindowsDevelopmentTools /quiet /norestart" -NoNewWindow -Wait
+          # Download Visual Studio 2022 with required components using winget and the wdk.vsconfig file
+          winget install --source winget --exact --id Microsoft.VisualStudio.2022.Community --override "--passive --config ./wdk.vsconfig"
+        shell: powershell
+
+      - name: Install Windows Driver Kit (WDK) using winget
+        run: |
+          winget install --source winget --exact --id Microsoft.WindowsWDK.10.0.26100 --log $env:USERPROFILE/Desktop/wdk-install.log
         shell: powershell
 
       - name: Verify Stampinf Installation
@@ -26,10 +31,4 @@ jobs:
             Write-Host "Stampinf not found!"
             exit 1
           }
-        shell: powershell
-
-      - name: Run Stampinf
-        run: |
-          $wdkPath = "C:\Program Files (x86)\Windows Kits\10\bin\x64"
-          & "$wdkPath\stampinf.exe" -f path\to\your.inf -d "YourCompany" -c "YourCatalog.cat"
-        shell: powershell
+   
