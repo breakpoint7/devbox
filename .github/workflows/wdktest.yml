@@ -1,0 +1,23 @@
+name: Run Stampinf Manually
+
+on:
+  workflow_dispatch:  # Allows manual trigger in GitHub Actions UI
+
+jobs:
+  stampinf_job:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Windows Driver Kit (WDK)
+        run: |
+          choco install windows-driver-kit -y
+        shell: powershell
+
+      - name: Run Stampinf
+        run: |
+          $wdkPath = "C:\Program Files (x86)\Windows Kits\10\bin\x64"
+          & "$wdkPath\stampinf.exe" -f path\to\your.inf -d "YourCompany" -c "YourCatalog.cat"
+        shell: powershell
