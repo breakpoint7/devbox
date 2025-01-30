@@ -1,4 +1,4 @@
-name: Run Stampinf Manually
+name: WinGet Setup
 
 on:
   workflow_dispatch:
@@ -7,8 +7,10 @@ jobs:
   test:
     runs-on: windows-latest
     steps:
-    - uses: actions/checkout@master
-    - name: Install winget
-      uses: Cyberboss/install-winget@v1
-    - name: Winget test
-      run: winget list --accept-source-agreements
+      - name: Install winget
+        run: |
+          Invoke-WebRequest -Uri https://aka.ms/get-winget -OutFile winget.msix
+          Add-AppxPackage .\winget.msix    - name: Winget test
+          
+      - name: Test Winget
+        run: winget list --accept-source-agreements
