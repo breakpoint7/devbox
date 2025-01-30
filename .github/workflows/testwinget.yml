@@ -7,14 +7,16 @@ jobs:
   test:
     runs-on: windows-latest
     steps:
-      - name: Install Chocolatey
-        run: |
-          Set-ExecutionPolicy Bypass -Scope Process -Force; `
-          [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; `
-          iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+      - name: Checkout repository
+        uses: actions/checkout@v2
 
-      - name: Install winget using Chocolatey
-        run: choco install microsoft-windows-appinstaller -y
+      - name: Download Winget Installer
+        run: |
+          Invoke-WebRequest -Uri https://github.com/microsoft/winget-cli/releases/download/v1.2.10271/Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle -OutFile winget.msixbundle
+
+      - name: Install Winget
+        run: |
+          Add-AppxPackage -Path winget.msixbundle
 
       - name: Test Winget
-        run: winget list --accept-source-agreements
+        run: winget --version
