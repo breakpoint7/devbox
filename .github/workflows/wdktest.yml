@@ -11,11 +11,18 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install winget (Windows Package Manager)
+      - name: Install winget via PowerShell script
         run: |
-          # Install the App Installer, which includes winget
-          Invoke-WebRequest -Uri https://aka.ms/Microsoft.VCLibs.x64.14.00.Desktop.appx -OutFile "appinstaller.appx"
-          Add-AppxPackage -Path "appinstaller.appx"
+          # Check if winget is already installed
+          if (-not (Get-Command winget -ErrorAction SilentlyContinue)) {
+            Write-Host "winget is not installed. Installing now..."
+            # Download and install the App Installer
+            Invoke-WebRequest -Uri https://aka.ms/Microsoft.VCLibs.x64.14.00.Desktop.appx -OutFile "appinstaller.appx"
+            Add-AppxPackage -Path "appinstaller.appx"
+            Write-Host "winget installation complete."
+          } else {
+            Write-Host "winget is already installed."
+          }
         shell: powershell
 
       - name: Install Visual Studio 2022 and Required Workloads
