@@ -1,7 +1,7 @@
 name: Run Stampinf Manually
 
 on:
-  workflow_dispatch:  # Allows manual trigger in GitHub Actions UI
+  workflow_dispatch:
 
 jobs:
   stampinf_job:
@@ -11,9 +11,21 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install Windows Driver Kit (WDK)
+      - name: Download and Install Windows Driver Kit (WDK)
         run: |
-          choco install windows-driver-kit -y
+          Invoke-WebRequest -Uri "https://go.microsoft.com/fwlink/?linkid=2128854" -OutFile "winsdksetup.exe"
+          Start-Process -FilePath "winsdksetup.exe" -ArgumentList "/features OptionId.WindowsDesktopDebuggers OptionId.WindowsDesktopDevelopmentTools OptionId.WindowsDevelopmentTools /quiet /norestart" -NoNewWindow -Wait
+        shell: powershell
+
+      - name: Verify Stampinf Installation
+        run: |
+          $wdkPath = "C:\Program Files (x86)\Windows Kits\10\bin\x64"
+          if (Test-Path "$wdkPath\stampinf.exe") {
+            Write-Host "Stampinf installed successfully."
+          } else {
+            Write-Host "Stampinf not found!"
+            exit 1
+          }
         shell: powershell
 
       - name: Run Stampinf
