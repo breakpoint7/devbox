@@ -11,6 +11,13 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Install winget (Windows Package Manager)
+        run: |
+          # Install the App Installer, which includes winget
+          Invoke-WebRequest -Uri https://aka.ms/Microsoft.VCLibs.x64.14.00.Desktop.appx -OutFile "appinstaller.appx"
+          Add-AppxPackage -Path "appinstaller.appx"
+        shell: powershell
+
       - name: Install Visual Studio 2022 and Required Workloads
         run: |
           # Download Visual Studio 2022 with required components using winget and the wdk.vsconfig file
@@ -31,4 +38,10 @@ jobs:
             Write-Host "Stampinf not found!"
             exit 1
           }
-   
+        shell: powershell
+
+      - name: Run Stampinf
+        run: |
+          $wdkPath = "C:\Program Files (x86)\Windows Kits\10\bin\x64"
+          & "$wdkPath\stampinf.exe" -f path\to\your.inf -d "YourCompany" -c "YourCatalog.cat"
+        shell: powershell
