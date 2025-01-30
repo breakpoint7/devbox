@@ -9,12 +9,12 @@ jobs:
 
     steps:
       - uses: actions/checkout@master
-
+      
       - name: Install winget
         run: |
           Invoke-WebRequest -Uri https://aka.ms/get-winget -OutFile winget.msix
-          Add-AppxPackage .\winget.msix    t
-      
+          Add-AppxPackage .\winget.msix    - name: Winget test
+          
       - name: Winget Version Installed
         run: winget --version
       
