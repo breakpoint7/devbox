@@ -30,13 +30,8 @@ jobs:
       shell: powershell
       run: |
         $ProgressPreference = 'SilentlyContinue'
-        if ("${{ inputs.GITHUB_TOKEN }}" -ne "NONE") {
-          $headers = @{ "Authorization" = "Bearer ${{ inputs.GITHUB_TOKEN }}" }
-          Write-Host "Token present"
-        } else {
-          $headers = @{}
-          Write-Host "No token present"
-        }
+        $headers = @{}
+        Write-Host "No token present"
 
         $releaseURL = "https://api.github.com/repos/microsoft/winget-cli/releases/164835566"
         $gitHubReleasesResponse = Invoke-RestMethod $releaseURL -Headers $headers
