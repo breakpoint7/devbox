@@ -8,29 +8,127 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      - uses: actions/checkout@master
-      - name: Install winget
-        uses: Cyberboss/install-winget@v1
-      
-      - name: Winget test
-        run: winget list --accept-source-agreements
-      
-      - name: Checkout repository
-        uses: actions/checkout@v4
+    - name: Download Microsoft.UI.Xaml v2.8.6
+      shell: powershell
+      run: |
+        $ProgressPreference = 'SilentlyContinue'
+        Invoke-WebRequest -Uri https://www.nuget.org/api/v2/package/Microsoft.UI.Xaml/2.8.6 -OutFile .\microsoft.ui.xaml.2.8.6.zip
 
-      - name: Install Visual Studio 2022 and Required Workloads
-        run: |
+    - name: Unzip Microsoft.UI.Xaml v2.8.6
+      shell: powershell
+      run: |
+        Expand-Archive .\microsoft.ui.xaml.2.8.6.zip
+
+    - name: Download Microsoft.VCLibs.x64.14.00.Desktop
+      shell: powershell
+      run: |
+        $ProgressPreference = 'SilentlyContinue'
+        Invoke-WebRequest -Uri https://aka.ms/Microsoft.VCLibs.x64.14.00.Desktop.appx -OutFile Microsoft.VCLibs.x64.14.00.Desktop.appx
+
+    - name: Determine Latest winget release via GitHub API
+      id: github_api
+      shell: powershell
+      run: |
+        $ProgressPreference = 'SilentlyContinue'
+        if ("${{ inputs.GITHUB_TOKEN }}" -ne "NONE") {
+          $headers = @{ "Authorization" = "Bearer ${{ inputs.GITHUB_TOKEN }}" }
+          Write-Host "Token present"
+        } else {
+          $headers = @{}
+          Write-Host "No token present"
+        }
+
+        $releaseURL = "https://api.github.com/repos/microsoft/winget-cli/releases/164835566"
+        $gitHubReleasesResponse = Invoke-RestMethod $releaseURL -Headers $headers
+        $wingetReleaseAssets = $gitHubReleasesResponse.assets
+        $latestWingetMsixBundleUri = $wingetReleaseAssets.browser_download_url | Where-Object {$_.EndsWith(".msixbundle")}
+        $latestWingetLicenseXmlUri = $wingetReleaseAssets.browser_download_url | Where-Object {$_.EndsWith("License1.xml")}
+        Write-Host "latest_winget_msix_bundle_uri=$latestWingetMsixBundleUri"
+        Write-Host "latest_winget_license_xml_uri=$latestWingetLicenseXmlUri"
+        Write-Output "latest_winget_msix_bundle_uri=$latestWingetMsixBundleUri" >> $Env:GITHUB_OUTPUT
+        Write-Output "latest_winget_license_xml_uri=$latestWingetLicenseXmlUri" >> $Env:GITHUB_OUTPUT
+
+    - name: Download winget
+      shell: powershell
+      run: |
+        $ProgressPreference = 'SilentlyContinue'
+        Invoke-WebRequest -Headers $headers -Uri "${{ steps.github_api.outputs.latest_winget_msix_bundle_uri }}" -OutFile "./winget.msixbundle"
+
+    - name: Download License
+      shell: powershell
+      run: |
+        $ProgressPreference = 'SilentlyContinue'
+        Invoke-WebRequest -Headers $headers -Uri "${{ steps.github_api.outputs.latest_winget_license_xml_uri }}" -OutFile "./winget_License1.xml"
+
+    - name: Install Microsoft.UI.Xaml v2.8.6
+      shell: powershell
+      run: |
+        Add-AppxPackage .\microsoft.ui.xaml.2.8.6\tools\AppX\x64\Release\Microsoft.UI.Xaml.2.8.appx
+
+    - name: Install Microsoft.VCLibs.x64.14.00.Desktop
+      shell: powershell
+      run: |
+        Add-AppxPackage Microsoft.VCLibs.x64.14.00.Desktop.appx
+
+    - name: Install winget
+      shell: powershell
+      run: |
+        echo "PROVISIONING WINGET"
+        Add-AppxProvisionedPackage -Online -PackagePath ./winget.msixbundle -LicensePath ./winget_License1.xml
+
+    - name: Installing Winget
+      shell: powershell
+      run: |
+        echo "INSTALLING WINGET"
+        $ProgressPreference = 'SilentlyContinue'
+        Add-AppxPackage .\winget.msixbundle
+
+    - name: Cleanup Downloads
+      shell: powershell
+      run: |
+        rm Microsoft.VCLibs.x64.14.00.Desktop.appx
+        rm ./winget_License1.xml
+        rm ./winget.msixbundle
+        Remove-Item -Recurse -Force .\microsoft.ui.xaml.2.8.6
+
+    - name: Wait to allow Installation to Finalize
+      shell: powershell
+      run: |
+        foreach ($i in 1..60) {
+          Start-Sleep -Seconds 1
+          Write-Host "Waiting for winget to install... ${i}"
+          if (Get-Command winget -ErrorAction SilentlyContinue) {
+            break
+          }
+        }
+
+    - name: Output winget Version
+      id: winget-version
+      shell: powershell
+      run: |
+         $version=winget --version
+         Write-Host "$version"
+         Write-Output "winget-version=$version" >> $Env:GITHUB_OUTPUT
+        
+    - name: Winget test
+      run: winget list --accept-source-agreements
+      
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Install Visual Studio 2022 and Required Workloads
+      run: |
           # Download Visual Studio 2022 with required components using winget and the wdk.vsconfig file
           winget install --source winget --exact --id Microsoft.VisualStudio.2022.Community --override "--passive --config ./wdk.vsconfig"
-        shell: powershell
+      shell: powershell
 
-      - name: Install Windows Driver Kit (WDK) using winget
-        run: |
+    - name: Install Windows Driver Kit (WDK) using winget
+      run: |
           winget install --source winget --exact --id Microsoft.WindowsWDK.10.0.26100 --log $env:USERPROFILE/Desktop/wdk-install.log
-        shell: powershell
+      shell: powershell
 
-      - name: Verify Stampinf Installation
-        run: |
+    - name: Verify Stampinf Installation
+      run: |
           $wdkPath = "C:\Program Files (x86)\Windows Kits\10\bin\x64"
           if (Test-Path "$wdkPath\stampinf.exe") {
             Write-Host "Stampinf installed successfully."
@@ -38,10 +136,10 @@ jobs:
             Write-Host "Stampinf not found!"
             exit 1
           }
-        shell: powershell
+      shell: powershell
 
-      - name: Run Stampinf
-        run: |
+    - name: Run Stampinf
+      run: |
           $wdkPath = "C:\Program Files (x86)\Windows Kits\10\bin\x64"
           & "$wdkPath\stampinf.exe" -f path\to\your.inf -d "YourCompany" -c "YourCatalog.cat"
-        shell: powershell
+      shell: powershell
