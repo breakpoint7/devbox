@@ -9,14 +9,11 @@ jobs:
 
     steps:
       - uses: actions/checkout@master
-      
       - name: Install winget
-        run: |
-          Invoke-WebRequest -Uri https://aka.ms/get-winget -OutFile winget.msix
-          Add-AppxPackage .\winget.msix    - name: Winget test
-          
-      - name: Winget Version Installed
-        run: winget --version
+        uses: Cyberboss/install-winget@v1
+      
+      - name: Winget test
+        run: winget list --accept-source-agreements
       
       - name: Checkout repository
         uses: actions/checkout@v4
